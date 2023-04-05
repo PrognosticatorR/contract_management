@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from 'react'
-import { formatEther } from 'ethers'
+import { formatEther, BrowserProvider } from 'ethers'
 
 const AuthenticatedContext = createContext(null)
 
@@ -16,12 +16,11 @@ export const AuthenticateProvider = (props) => {
   const [defaultAccount, setDefaultAccount] = useState(null)
   const [userBalance, setUserBalance] = useState(null)
   const [ConnButtonText, setConnButtonText] = useState('Connect Wallet!')
-
+  const [provider, setProvider] = useState(null)
   const getAccountBalance = useCallback((account) => {
     window.ethereum
       .request({ method: 'eth_getBalance', params: [account, 'latest'] })
       .then((balance) => {
-        // console.log(parseUnits(balance, 'ether'))
         setUserBalance(parseFloat(formatEther(balance)).toFixed(4))
       })
       .catch((error) => {
@@ -31,8 +30,12 @@ export const AuthenticateProvider = (props) => {
 
   const accountChangedHandler = useCallback(
     (newAccount) => {
-      setDefaultAccount(newAccount)
-      getAccountBalance(newAccount.toString())
+      let account = newAccount
+      if (newAccount instanceof Array) {
+        account = newAccount[0]
+      }
+      setDefaultAccount(account)
+      getAccountBalance(account)
     },
     [getAccountBalance]
   )
@@ -40,9 +43,12 @@ export const AuthenticateProvider = (props) => {
   const connectWalletHandler = useCallback(() => {
     if (window.ethereum && window.ethereum.isMetaMask) {
       console.log('MetaMask Here!')
+      const provider = new BrowserProvider(window.ethereum)
+      setProvider(provider)
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
         .then((result) => {
+          console.log(result)
           accountChangedHandler(result[0])
           setConnButtonText('Wallet Connected')
           getAccountBalance(result[0])
@@ -72,8 +78,9 @@ export const AuthenticateProvider = (props) => {
       connectWalletHandler,
       ConnButtonText,
       userBalance,
+      provider,
     }
-  }, [errorMessage, chainChangedHandler, connectWalletHandler, defaultAccount, userBalance, ConnButtonText, accountChangedHandler])
+  }, [errorMessage, chainChangedHandler, connectWalletHandler, defaultAccount, userBalance, ConnButtonText, accountChangedHandler, provider])
 
   return <AuthenticatedContext.Provider value={values} {...props} />
 }

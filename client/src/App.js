@@ -3,13 +3,15 @@ import { useAuthenticated } from './Context/AuthenticateContext'
 import { Button, Card, CardBody, CardHeader, Center, Container, Text } from '@chakra-ui/react'
 import { SendEth } from './components/SendEth'
 import useContract from './hooks/useContract'
+import { Info } from './components/Info'
 import * as VaultArtifact from './artifacts/contracts/Vault.sol/Vault.json'
 
 function App() {
-  const { connectWalletHandler, ConnButtonText, accountChangedHandler, chainChangedHandler, isAuthenticated, defaultAccount, userBalance } = useAuthenticated()
+  const { connectWalletHandler, ConnButtonText, accountChangedHandler, chainChangedHandler, isAuthenticated, defaultAccount, userBalance, provider } =
+    useAuthenticated()
   window.ethereum.on('accountsChanged', accountChangedHandler)
   window.ethereum.on('chainChanged', chainChangedHandler)
-  const { contractInstance } = useContract(VaultArtifact, '0x6600a6F9B2229d465EF963d1C9ee6b3C82D80A45')
+  const { contractInstance } = useContract(VaultArtifact, '0x366A000a5D51d8e620874683002C664C943F3490', provider)
 
   return (
     <Center alignItems="center" display="flex" height={'100vh'}>
@@ -28,14 +30,17 @@ function App() {
             {!!isAuthenticated && (
               <>
                 <Container display="flex" width={'100%'} justifyContent="space-between">
-                  <Text align="left" fontSize={16}>
-                    Address: {defaultAccount.substring(0, 11)}
-                  </Text>
+                  {defaultAccount && typeof defaultAccount === 'string' && (
+                    <Text align="left" fontSize={16}>
+                      Address: {defaultAccount.substring(0, 15)}
+                    </Text>
+                  )}
                   <Text align="right " fontSize={16}>
                     Balance Of: {userBalance} Ether
                   </Text>
                 </Container>
-                {/* <SendEth /> */}
+                <Info contract={contractInstance} defaultAccount={defaultAccount} />
+                <SendEth contractInstance={contractInstance} />
               </>
             )}
           </Container>

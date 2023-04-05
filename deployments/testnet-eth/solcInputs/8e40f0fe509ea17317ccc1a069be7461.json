@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Vault.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.9;\n\ncontract Vault {\n    uint public unlockTime;\n    address payable public owner;\n    mapping(address => uint) public shareOf;\n    event Withdrawal(uint amount, uint when);\n    event Deposite(uint amount, address investor);\n\n    constructor(uint _unlockTime) payable {\n        require(block.timestamp < _unlockTime, 'Unlock time should be in the future');\n        unlockTime = _unlockTime;\n        owner = payable(msg.sender);\n    }\n\n    function withdraw() public {\n        require(block.timestamp >= unlockTime, \"You can't withdraw yet\");\n        require(shareOf[msg.sender] > 0, 'Cant withdraw zero balace!');\n        emit Withdrawal(shareOf[msg.sender], block.timestamp);\n        payable(msg.sender).transfer(shareOf[msg.sender]);\n    }\n\n    function getShare(address investor) public view returns (uint) {\n        return shareOf[investor];\n    }\n\n    function getTotalValueLocked() public view returns (uint) {\n        return address(this).balance;\n    }\n\n    receive() external payable {\n        require(msg.value > 0, 'deposite must be larger then zero');\n        shareOf[msg.sender] += msg.value;\n        emit Deposite(msg.value, msg.sender);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

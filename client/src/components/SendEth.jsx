@@ -3,17 +3,16 @@ import { Stack, FormControl, Input, Button, useColorModeValue, Heading, Text, Co
 import { CheckIcon } from '@chakra-ui/icons'
 import { parseUnits } from 'ethers'
 import { useAuthenticated } from '../Context/AuthenticateContext'
-import * as VaultArtifact from '../artifacts/contracts/Vault.sol/Vault.json'
-import useContract from '../hooks/useContract'
 
-export const SendEth = () => {
+export const SendEth = ({ contractInstance }) => {
   const [amount, setAmount] = useState(0)
   const [state, setState] = useState('initial')
   const [error, setError] = useState(false)
+  const [erroMessage, setErrorMessage] = useState('')
   const { connectWalletHandler, isAuthenticated, defaultAccount } = useAuthenticated()
-  const { contractInstance } = useContract(VaultArtifact, '0x6600a6F9B2229d465EF963d1C9ee6b3C82D80A45')
 
   async function handleClick(e) {
+    e.preventDefault()
     try {
       setError(false)
       setState('submitting')
@@ -27,18 +26,24 @@ export const SendEth = () => {
         setState('initial')
         return
       }
-      const amountInWei = parseUnits(amount, 'ether')
+
+      const amount_in_wei = parseUnits(amount, 'ether')
+      const amountInWei = amount_in_wei.toString(16)
       const transactionObj = {
         from: defaultAccount,
-        to: contractInstance.address,
-        value: amountInWei._hex,
+        to: contractInstance.target,
+        value: amountInWei,
       }
+      console.log(transactionObj)
       await window.ethereum.request({ method: 'eth_sendTransaction', params: [transactionObj] })
       setState('success')
     } catch (error) {
       setError(true)
+      setErrorMessage(error.message)
+      setState('initial')
     }
   }
+
   return (
     <Flex align={'center'} justify={'center'} margin={50}>
       <Container maxW={'lg'} bg={useColorModeValue('yellow.30', 'yellow.50')} boxShadow={'xl'} rounded={'lg'} p={6} direction={'column'}>
@@ -86,7 +91,7 @@ export const SendEth = () => {
           </FormControl>
         </Stack>
         <Text mt={2} textAlign={'center'} color={error ? 'red.500' : 'gray.500'}>
-          {error ? 'Oh no an error occured! 😢 Please try again later.' : 'Secure your investment!'}
+          {error ? erroMessage : 'Secure Your Crypto!'}
         </Text>
       </Container>
     </Flex>
