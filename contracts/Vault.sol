@@ -14,7 +14,7 @@ contract Vault {
         owner = payable(msg.sender);
     }
 
-    function withdraw() public {
+    function withdraw() public payable {
         require(block.timestamp >= unlockTime, "You can't withdraw yet");
         require(shareOf[msg.sender] > 0, 'Cant withdraw zero balace!');
         emit Withdrawal(shareOf[msg.sender], block.timestamp);
