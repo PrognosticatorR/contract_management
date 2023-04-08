@@ -7,11 +7,11 @@ import { Info } from './components/Info'
 import * as VaultArtifact from './artifacts/contracts/Vault.sol/Vault.json'
 
 function App() {
-  const { connectWalletHandler, ConnButtonText, accountChangedHandler, chainChangedHandler, isAuthenticated, defaultAccount, userBalance, provider } =
+  const { connectWalletHandler, ConnButtonText, accountChangedHandler, chainChangedHandler, isAuthenticated, defaultAccount, userBalance, signer } =
     useAuthenticated()
   window.ethereum.on('accountsChanged', accountChangedHandler)
   window.ethereum.on('chainChanged', chainChangedHandler)
-  const { contractInstance } = useContract(VaultArtifact, '0x366A000a5D51d8e620874683002C664C943F3490', provider)
+  const { contractInstance } = useContract(VaultArtifact, '0x09b94a47B98fBF0Ee95ee4851cEf9835e8f0aE74', signer)
 
   return (
     <Center alignItems="center" display="flex" height={'100vh'}>

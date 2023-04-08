@@ -12,11 +12,11 @@ export const useAuthenticated = () => {
 }
 
 export const AuthenticateProvider = (props) => {
-  const [errorMessage, setErrorMessage] = useState(null)
-  const [defaultAccount, setDefaultAccount] = useState(null)
-  const [userBalance, setUserBalance] = useState(null)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [defaultAccount, setDefaultAccount] = useState(0x0)
+  const [userBalance, setUserBalance] = useState(0)
   const [ConnButtonText, setConnButtonText] = useState('Connect Wallet!')
-  const [provider, setProvider] = useState(null)
+  const [signer, setSigner] = useState({})
   const getAccountBalance = useCallback((account) => {
     window.ethereum
       .request({ method: 'eth_getBalance', params: [account, 'latest'] })
@@ -40,11 +40,12 @@ export const AuthenticateProvider = (props) => {
     [getAccountBalance]
   )
 
-  const connectWalletHandler = useCallback(() => {
+  const connectWalletHandler = useCallback(async() => {
     if (window.ethereum && window.ethereum.isMetaMask) {
       console.log('MetaMask Here!')
       const provider = new BrowserProvider(window.ethereum)
-      setProvider(provider)
+      const signer =  await provider.getSigner();
+      setSigner(signer)
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
         .then((result) => {
@@ -78,9 +79,9 @@ export const AuthenticateProvider = (props) => {
       connectWalletHandler,
       ConnButtonText,
       userBalance,
-      provider,
+      signer,
     }
-  }, [errorMessage, chainChangedHandler, connectWalletHandler, defaultAccount, userBalance, ConnButtonText, accountChangedHandler, provider])
+  }, [errorMessage, chainChangedHandler, connectWalletHandler, defaultAccount, userBalance, ConnButtonText, accountChangedHandler, signer])
 
   return <AuthenticatedContext.Provider value={values} {...props} />
 }

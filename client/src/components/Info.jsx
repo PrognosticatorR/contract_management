@@ -1,9 +1,8 @@
 import { Box, Flex, SimpleGrid, Stat, StatLabel, StatNumber, useColorModeValue } from '@chakra-ui/react'
 import { FaEthereum } from 'react-icons/fa'
 import { AiFillLock } from 'react-icons/ai'
-import { useEffect, useState, useCallback } from 'react'
-import { formatEther, parseUnits } from 'ethers'
 
+import { useFetchVault } from '../hooks/useFetchVault'
 function StatsCard(props) {
   const { title, stat, icon } = props
   return (
@@ -26,26 +25,7 @@ function StatsCard(props) {
 }
 
 export const Info = ({ contract, defaultAccount }) => {
-  const [totalValue, setTotalValue] = useState(null)
-  const [usersDeposite, setUsersDeposite] = useState(null)
-  const [unlockTime, setunlockTime] = useState(null)
-  const fetchData = useCallback(async () => {
-    const value = await contract.getTotalValueLocked()
-    const myShare = await contract.getShare(defaultAccount)
-    const unlockTime = await contract.unlockTime()
-    return [value, myShare, unlockTime]
-  }, [contract, defaultAccount])
-
-  useEffect(() => {
-    fetchData().then((data) => {
-      const [value, myShare, unlockTime] = data
-      const date = new Date(unlockTime.toString(10) * 1000).toDateString()
-      setTotalValue(formatEther(value))
-      setUsersDeposite(formatEther(myShare))
-      setunlockTime(date)
-    })
-  }, [fetchData, usersDeposite, totalValue, defaultAccount])
-
+  const [unlockTime, usersDeposite, totalValue] = useFetchVault(contract, defaultAccount)
   return (
     <Box maxW="5xl" mx={'auto'} pt={5} px={{ base: 2, sm: 12, md: 17 }}>
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 5, lg: 8 }}>

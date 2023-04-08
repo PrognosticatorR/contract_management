@@ -1,16 +1,19 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Stack, FormControl, Input, Button, useColorModeValue, Heading, Text, Container, Flex } from '@chakra-ui/react'
 import { CheckIcon } from '@chakra-ui/icons'
-import { parseUnits } from 'ethers'
+import { parseUnits, formatEther, Wallet } from 'ethers'
 import { useAuthenticated } from '../Context/AuthenticateContext'
+import { useFetchVault } from '../hooks/useFetchVault'
 
 export const SendEth = ({ contractInstance }) => {
   const [amount, setAmount] = useState(0)
   const [state, setState] = useState('initial')
   const [error, setError] = useState(false)
   const [erroMessage, setErrorMessage] = useState('')
-  const { connectWalletHandler, isAuthenticated, defaultAccount } = useAuthenticated()
-
+  const { connectWalletHandler, isAuthenticated, defaultAccount, signer } = useAuthenticated()
+  const [unlockTime] = useFetchVault(contractInstance, defaultAccount)
+  // const isReadyToWithdrawal = useMemo(() => new Date(unlockTime) < new Date(), [unlockTime])
+  const isReadyToWithdrawal = true
   async function handleClick(e) {
     e.preventDefault()
     try {
@@ -23,10 +26,10 @@ export const SendEth = ({ contractInstance }) => {
       }
       if (amount === 0) {
         setError(true)
+        setErrorMessage('Amount must be greater then 0.')
         setState('initial')
         return
       }
-
       const amount_in_wei = parseUnits(amount, 'ether')
       const amountInWei = amount_in_wei.toString(16)
       const transactionObj = {
@@ -44,12 +47,22 @@ export const SendEth = ({ contractInstance }) => {
     }
   }
 
-  return (
-    <Flex align={'center'} justify={'center'} margin={50}>
-      <Container maxW={'lg'} bg={useColorModeValue('yellow.30', 'yellow.50')} boxShadow={'xl'} rounded={'lg'} p={6} direction={'column'}>
-        <Heading as={'h2'} fontSize={{ base: 'xl', sm: '2xl' }} textAlign={'center'} mb={5}>
-          Send Eth To Vault
-        </Heading>
+  async function withdrawFund() {
+    try {
+      setState('submitting')
+      const txn = await contractInstance.connect(signer).withdraw()
+      const res = txn.wait(1)
+      setState('success')
+    } catch (error) {
+      setError(true)
+      setErrorMessage(error.message)
+      setState('initial')
+    }
+  }
+
+  function renderSendForm() {
+    return (
+      <>
         <Stack
           direction={{ base: 'column', md: 'row' }}
           as={'form'}
@@ -93,6 +106,39 @@ export const SendEth = ({ contractInstance }) => {
         <Text mt={2} textAlign={'center'} color={error ? 'red.500' : 'gray.500'}>
           {error ? erroMessage : 'Secure Your Crypto!'}
         </Text>
+      </>
+    )
+  }
+  function renderWithdraw() {
+    return (
+      <Stack
+        direction={{ base: 'column', md: 'row' }}
+        as={'form'}
+        spacing={'12px'}
+        onSubmit={async (e) => {
+          handleClick(e)
+        }}
+      >
+        <Button
+          colorScheme={state === 'success' ? 'green' : 'red'}
+          isLoading={state === 'submitting'}
+          w="100%"
+          type={state === 'success' ? 'button' : 'submit'}
+          variant="outline"
+          onClick={() => withdrawFund()}
+        >
+          {state === 'success' ? <CheckIcon /> : 'Withdraw'}
+        </Button>
+      </Stack>
+    )
+  }
+  return (
+    <Flex align={'center'} justify={'center'} margin={50}>
+      <Container maxW={'lg'} bg={useColorModeValue('yellow.30', 'yellow.50')} boxShadow={'xl'} rounded={'lg'} p={6} direction={'column'}>
+        <Heading as={'h2'} fontSize={{ base: 'xl', sm: '2xl' }} textAlign={'center'} mb={5}>
+          {isReadyToWithdrawal ? 'Withdraw Your Fund!' : 'Send Eth To Vault'}
+        </Heading>
+        {isReadyToWithdrawal ? renderWithdraw() : renderSendForm()}
       </Container>
     </Flex>
   )
