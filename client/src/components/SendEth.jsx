@@ -12,8 +12,7 @@ export const SendEth = ({ contractInstance }) => {
   const [erroMessage, setErrorMessage] = useState('')
   const { connectWalletHandler, isAuthenticated, defaultAccount, signer } = useAuthenticated()
   const [unlockTime] = useFetchVault(contractInstance, defaultAccount)
-  // const isReadyToWithdrawal = useMemo(() => new Date(unlockTime) < new Date(), [unlockTime])
-  const isReadyToWithdrawal = true
+  const isReadyToWithdrawal = useMemo(() => new Date(unlockTime) < new Date(), [unlockTime])
   async function handleClick(e) {
     e.preventDefault()
     try {
