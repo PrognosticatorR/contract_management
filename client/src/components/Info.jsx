@@ -25,7 +25,7 @@ function StatsCard(props) {
 }
 
 export const Info = ({ contract, defaultAccount }) => {
-  const [unlockTime, usersDeposite, totalValue] = useFetchVault(contract, defaultAccount)
+  const { unlockTime, usersDeposite, totalValue } = useFetchVault(contract, defaultAccount)
   return (
     <Box maxW="5xl" mx={'auto'} pt={5} px={{ base: 2, sm: 12, md: 17 }}>
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 5, lg: 8 }}>

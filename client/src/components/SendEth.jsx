@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
-import { Stack, FormControl, Input, Button, useColorModeValue, Heading, Text, Container, Flex } from '@chakra-ui/react'
+import { useState, useMemo } from 'react'
+import { Stack, FormControl, Input, Button, useColorModeValue, Heading, Text, Container, Flex, Spinner } from '@chakra-ui/react'
 import { CheckIcon } from '@chakra-ui/icons'
-import { parseUnits, formatEther, Wallet } from 'ethers'
+import { parseUnits } from 'ethers'
 import { useAuthenticated } from '../Context/AuthenticateContext'
 import { useFetchVault } from '../hooks/useFetchVault'
 
@@ -11,8 +11,9 @@ export const SendEth = ({ contractInstance }) => {
   const [error, setError] = useState(false)
   const [erroMessage, setErrorMessage] = useState('')
   const { connectWalletHandler, isAuthenticated, defaultAccount, signer } = useAuthenticated()
-  const [unlockTime] = useFetchVault(contractInstance, defaultAccount)
+  const { unlockTime, contractOwner, fetchingData } = useFetchVault(contractInstance, defaultAccount)
   const isReadyToWithdrawal = useMemo(() => new Date(unlockTime) < new Date(), [unlockTime])
+  const isCurrnetuserOwner = contractOwner.toLowerCase() === defaultAccount.toLowerCase()
   async function handleClick(e) {
     e.preventDefault()
     try {
@@ -45,12 +46,11 @@ export const SendEth = ({ contractInstance }) => {
       setState('initial')
     }
   }
-
   async function withdrawFund() {
     try {
       setState('submitting')
       const txn = await contractInstance.connect(signer).withdraw()
-      const res = txn.wait(1)
+      txn.wait(1)
       setState('success')
     } catch (error) {
       setError(true)
@@ -58,6 +58,20 @@ export const SendEth = ({ contractInstance }) => {
       setState('initial')
     }
   }
+
+  async function closeVault() {
+    try {
+      setState('submitting')
+      const txn = await contractInstance.connect(signer).closeVault()
+      txn.wait(1)
+      setState('success')
+    } catch (error) {
+      setError(true)
+      setErrorMessage(error.message)
+      setState('initial')
+    }
+  }
+  console.log({ contractOwner, defaultAccount })
 
   function renderSendForm() {
     return (
@@ -108,37 +122,45 @@ export const SendEth = ({ contractInstance }) => {
       </>
     )
   }
-  function renderWithdraw() {
+  function renderButton() {
+    const btnText = isCurrnetuserOwner ? 'Close Vault!' : 'Withdraw!'
+    const btnAction = isCurrnetuserOwner ? closeVault : withdrawFund
+    console.log({ btnText, btnAction })
     return (
-      <Stack
-        direction={{ base: 'column', md: 'row' }}
-        as={'form'}
-        spacing={'12px'}
-        onSubmit={async (e) => {
-          handleClick(e)
-        }}
-      >
+      <Stack direction={{ base: 'column', md: 'row' }} as={'form'} spacing={'12px'}>
         <Button
           colorScheme={state === 'success' ? 'green' : 'red'}
           isLoading={state === 'submitting'}
           w="100%"
           type={state === 'success' ? 'button' : 'submit'}
           variant="outline"
-          onClick={() => withdrawFund()}
+          onClick={() => btnAction()}
         >
-          {state === 'success' ? <CheckIcon /> : 'Withdraw'}
+          {state === 'success' ? <CheckIcon /> : btnText}
         </Button>
+      </Stack>
+    )
+  }
+  function renderLoader() {
+    return (
+      <Stack direction={{ base: 'column', md: 'row' }} as={'form'} spacing={'12px'}>
+        <Spinner size={'xl'} alignSelf={'center'} />
       </Stack>
     )
   }
   return (
     <Flex align={'center'} justify={'center'} margin={50}>
-      <Container maxW={'lg'} bg={useColorModeValue('yellow.30', 'yellow.50')} boxShadow={'xl'} rounded={'lg'} p={6} direction={'column'}>
-        <Heading as={'h2'} fontSize={{ base: 'xl', sm: '2xl' }} textAlign={'center'} mb={5}>
-          {isReadyToWithdrawal ? 'Withdraw Your Fund!' : 'Send Eth To Vault'}
-        </Heading>
-        {isReadyToWithdrawal ? renderWithdraw() : renderSendForm()}
-      </Container>
+      {!fetchingData ? (
+        <Container maxW={'lg'} bg={useColorModeValue('yellow.30', 'yellow.50')} boxShadow={'xl'} rounded={'lg'} p={6} direction={'column'}>
+          <Heading as={'h2'} fontSize={{ base: 'xl', sm: '2xl' }} textAlign={'center'} mb={5}>
+            {isReadyToWithdrawal ? 'Withdraw Your Fund!' : 'Send Eth To Vault'}
+          </Heading>
+          {console.log(fetchingData)}
+          {isReadyToWithdrawal || isCurrnetuserOwner ? renderButton() : renderSendForm()}
+        </Container>
+      ) : (
+        renderLoader()
+      )}
     </Flex>
   )
 }
