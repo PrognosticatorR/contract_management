@@ -7,6 +7,7 @@ export const useFetchVault = (contractInstance, defaultAccount) => {
   const [usersDeposite, setUsersDeposite] = useState(0)
   const [unlockTime, setunlockTime] = useState(0)
   const [contractOwner, setContractOwner] = useState('')
+  const [canWithdrawEarly, setCanWithdrawEarly] = useState(false)
 
   const fetchData = useCallback(async () => {
     setFetchingData(true)
@@ -15,21 +16,23 @@ export const useFetchVault = (contractInstance, defaultAccount) => {
       await contractInstance.getShare(defaultAccount),
       await contractInstance.unlockTime(),
       await contractInstance.owner(),
+      await contractInstance.canWithdrawEarly(),
     ])
   }, [contractInstance, defaultAccount])
 
   useEffect(() => {
     fetchData()
       .then((data) => {
-        const [value, myShare, unlockTime, contractOwner] = data
+        const [value, myShare, unlockTime, contractOwner, canWithdrawEarly] = data
         const date = new Date(unlockTime.value.toString() * 1000).toDateString()
         setTotalValue(formatEther(value.value))
         setUsersDeposite(formatEther(myShare.value))
         setunlockTime(date)
         setContractOwner(contractOwner.value)
+        setCanWithdrawEarly(canWithdrawEarly.value)
       })
       .then(() => setFetchingData(false))
-  }, [])
+  }, [fetchData])
 
   return useMemo(() => {
     return {
@@ -37,7 +40,8 @@ export const useFetchVault = (contractInstance, defaultAccount) => {
       usersDeposite,
       totalValue,
       contractOwner,
-      fetchingData
+      fetchingData,
+      canWithdrawEarly,
     }
-  }, [unlockTime, usersDeposite, totalValue, contractOwner,fetchingData])
+  }, [unlockTime, usersDeposite, totalValue, contractOwner, fetchingData, canWithdrawEarly])
 }

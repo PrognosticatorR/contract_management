@@ -1,7 +1,5 @@
 {
-  "_format": "hh-sol-artifact-1",
-  "contractName": "Vault",
-  "sourceName": "contracts/Vault.sol",
+  "address": "0xf2E23c2d9bB29D5543f72F9A204a24e3E033A017",
   "abi": [
     {
       "inputs": [
@@ -161,8 +159,103 @@
       "type": "receive"
     }
   ],
+  "transactionHash": "0xbc25f8351587add7afa21bb26ff519a0f736fc2a7a0ed80c45403d8130326791",
+  "receipt": {
+    "to": null,
+    "from": "0xc503B18E8fD869be93C3eA020cfE9ccE5Db10e30",
+    "contractAddress": "0xf2E23c2d9bB29D5543f72F9A204a24e3E033A017",
+    "transactionIndex": 0,
+    "gasUsed": "363252",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xcd80c799f79d1b6e9ffb1282a99266cc6f1d4a7e7359d2b2a19fa48c8552e211",
+    "transactionHash": "0xbc25f8351587add7afa21bb26ff519a0f736fc2a7a0ed80c45403d8130326791",
+    "logs": [],
+    "blockNumber": 14,
+    "cumulativeGasUsed": "363252",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    1681304808
+  ],
+  "numDeployments": 9,
+  "solcInputHash": "8a9fc6a291a6a3f7fbc4843d38a57ed1",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.10+commit.fc410830\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_unlockTime\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"investor\",\"type\":\"address\"}],\"name\":\"Deposite\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"when\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"canWithdrawEarly\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"closeVault\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"investor\",\"type\":\"address\"}],\"name\":\"getShare\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalValueLocked\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address payable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"shareOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unlockTime\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Vault.sol\":\"Vault\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/Vault.sol\":{\"content\":\"// SPDX-License-Identifier: UNLICENSED\\npragma solidity ^0.8.1;\\n\\ncontract Vault {\\n    uint public unlockTime;\\n    address payable public owner;\\n    mapping(address => uint) public shareOf;\\n    event Withdrawal(uint amount, uint when);\\n    event Deposite(uint amount, address investor);\\n    bool public canWithdrawEarly;\\n\\n    constructor(uint _unlockTime) payable {\\n        require(block.timestamp <= _unlockTime, 'Unlock time should be in the future');\\n        unlockTime = _unlockTime;\\n        owner = payable(msg.sender);\\n    }\\n\\n    modifier onlyOwner() {\\n        require(msg.sender == owner, 'Only owner can do this');\\n        _;\\n    }\\n\\n    function withdraw() external payable {\\n        require(block.timestamp >= unlockTime || canWithdrawEarly, \\\"You can't withdraw yet\\\");\\n        uint balanceOfuser = shareOf[msg.sender];\\n        require(balanceOfuser > 0, 'Cant withdraw zero balace!');\\n        shareOf[msg.sender] = 0;\\n        payable(msg.sender).transfer(balanceOfuser);\\n        emit Withdrawal(balanceOfuser, block.timestamp);\\n    }\\n\\n    function getShare(address investor) external view returns (uint) {\\n        return shareOf[investor];\\n    }\\n\\n    function getTotalValueLocked() external view returns (uint) {\\n        return address(this).balance;\\n    }\\n\\n    function closeVault() external payable onlyOwner {\\n        require(!canWithdrawEarly, 'Already approved to withraw funds!');\\n        canWithdrawEarly = true;\\n    }\\n\\n    receive() external payable {\\n        require(msg.value > 0, 'deposite must be larger then zero');\\n        shareOf[msg.sender] += msg.value;\\n        emit Deposite(msg.value, msg.sender);\\n    }\\n}\\n\",\"keccak256\":\"0xe84c4e6fd47f41857915f843415f9f028ff46234c10389671b47a711260eb28e\",\"license\":\"UNLICENSED\"}},\"version\":1}",
   "bytecode": "0x60806040526040516105953803806105958339810160408190526100229161009c565b804211156100825760405162461bcd60e51b815260206004820152602360248201527f556e6c6f636b2074696d652073686f756c6420626520696e207468652066757460448201526275726560e81b606482015260840160405180910390fd5b600055600180546001600160a01b031916331790556100b5565b6000602082840312156100ae57600080fd5b5051919050565b6104d1806100c46000396000f3fe60806040526004361061007f5760003560e01c80634b3ab9c51161004e5780634b3ab9c5146101ae5780637f61559f146101e45780638da5cb5b1461020e578063b26025aa1461024657600080fd5b806318976fa21461014657806321e5e2c414610150578063251c1aa3146101905780633ccfd60b146101a657600080fd5b3661014157600034116100e35760405162461bcd60e51b815260206004820152602160248201527f6465706f73697465206d757374206265206c6172676572207468656e207a65726044820152606f60f81b60648201526084015b60405180910390fd5b3360009081526002602052604081208054349290610102908490610445565b9091555050604080513481523360208201527fbdc4dc3aa132058e1659954d2fee5bd92e12c4c8f0652f5ce56be6ec59d159de910160405180910390a1005b600080fd5b61014e610259565b005b34801561015c57600080fd5b5061017d61016b36600461046b565b60026020526000908152604090205481565b6040519081526020015b60405180910390f35b34801561019c57600080fd5b5061017d60005481565b61014e610319565b3480156101ba57600080fd5b5061017d6101c936600461046b565b6001600160a01b031660009081526002602052604090205490565b3480156101f057600080fd5b506003546101fe9060ff1681565b6040519015158152602001610187565b34801561021a57600080fd5b5060015461022e906001600160a01b031681565b6040516001600160a01b039091168152602001610187565b34801561025257600080fd5b504761017d565b6001546001600160a01b031633146102ac5760405162461bcd60e51b81526020600482015260166024820152754f6e6c79206f776e65722063616e20646f207468697360501b60448201526064016100da565b60035460ff161561030a5760405162461bcd60e51b815260206004820152602260248201527f416c726561647920617070726f76656420746f20776974687261772066756e64604482015261732160f01b60648201526084016100da565b6003805460ff19166001179055565b6000544210158061032c575060035460ff165b6103715760405162461bcd60e51b8152602060048201526016602482015275165bdd4818d85b89dd081dda5d1a191c985dc81e595d60521b60448201526064016100da565b33600090815260026020526040902054806103ce5760405162461bcd60e51b815260206004820152601a60248201527f43616e74207769746864726177207a65726f2062616c6163652100000000000060448201526064016100da565b336000818152600260205260408082208290555183156108fc0291849190818181858888f19350505050158015610409573d6000803e3d6000fd5b50604080518281524260208201527fbf2ed60bd5b5965d685680c01195c9514e4382e28e3a5a2d2d5244bf59411b93910160405180910390a150565b6000821982111561046657634e487b7160e01b600052601160045260246000fd5b500190565b60006020828403121561047d57600080fd5b81356001600160a01b038116811461049457600080fd5b939250505056fea264697066735822122069b7a7727d5c595137d88d29a94a4fa94c2728184ad72bc6cb9eb2511d7ef5ec64736f6c634300080a0033",
   "deployedBytecode": "0x60806040526004361061007f5760003560e01c80634b3ab9c51161004e5780634b3ab9c5146101ae5780637f61559f146101e45780638da5cb5b1461020e578063b26025aa1461024657600080fd5b806318976fa21461014657806321e5e2c414610150578063251c1aa3146101905780633ccfd60b146101a657600080fd5b3661014157600034116100e35760405162461bcd60e51b815260206004820152602160248201527f6465706f73697465206d757374206265206c6172676572207468656e207a65726044820152606f60f81b60648201526084015b60405180910390fd5b3360009081526002602052604081208054349290610102908490610445565b9091555050604080513481523360208201527fbdc4dc3aa132058e1659954d2fee5bd92e12c4c8f0652f5ce56be6ec59d159de910160405180910390a1005b600080fd5b61014e610259565b005b34801561015c57600080fd5b5061017d61016b36600461046b565b60026020526000908152604090205481565b6040519081526020015b60405180910390f35b34801561019c57600080fd5b5061017d60005481565b61014e610319565b3480156101ba57600080fd5b5061017d6101c936600461046b565b6001600160a01b031660009081526002602052604090205490565b3480156101f057600080fd5b506003546101fe9060ff1681565b6040519015158152602001610187565b34801561021a57600080fd5b5060015461022e906001600160a01b031681565b6040516001600160a01b039091168152602001610187565b34801561025257600080fd5b504761017d565b6001546001600160a01b031633146102ac5760405162461bcd60e51b81526020600482015260166024820152754f6e6c79206f776e65722063616e20646f207468697360501b60448201526064016100da565b60035460ff161561030a5760405162461bcd60e51b815260206004820152602260248201527f416c726561647920617070726f76656420746f20776974687261772066756e64604482015261732160f01b60648201526084016100da565b6003805460ff19166001179055565b6000544210158061032c575060035460ff165b6103715760405162461bcd60e51b8152602060048201526016602482015275165bdd4818d85b89dd081dda5d1a191c985dc81e595d60521b60448201526064016100da565b33600090815260026020526040902054806103ce5760405162461bcd60e51b815260206004820152601a60248201527f43616e74207769746864726177207a65726f2062616c6163652100000000000060448201526064016100da565b336000818152600260205260408082208290555183156108fc0291849190818181858888f19350505050158015610409573d6000803e3d6000fd5b50604080518281524260208201527fbf2ed60bd5b5965d685680c01195c9514e4382e28e3a5a2d2d5244bf59411b93910160405180910390a150565b6000821982111561046657634e487b7160e01b600052601160045260246000fd5b500190565b60006020828403121561047d57600080fd5b81356001600160a01b038116811461049457600080fd5b939250505056fea264697066735822122069b7a7727d5c595137d88d29a94a4fa94c2728184ad72bc6cb9eb2511d7ef5ec64736f6c634300080a0033",
-  "linkReferences": {},
-  "deployedLinkReferences": {}
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 3,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "unlockTime",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 5,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "owner",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address_payable"
+      },
+      {
+        "astId": 9,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "shareOf",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 23,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "canWithdrawEarly",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_bool"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_address_payable": {
+        "encoding": "inplace",
+        "label": "address payable",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
 }

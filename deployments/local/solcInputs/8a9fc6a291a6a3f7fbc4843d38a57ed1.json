@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Vault.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.1;\n\ncontract Vault {\n    uint public unlockTime;\n    address payable public owner;\n    mapping(address => uint) public shareOf;\n    event Withdrawal(uint amount, uint when);\n    event Deposite(uint amount, address investor);\n    bool public canWithdrawEarly;\n\n    constructor(uint _unlockTime) payable {\n        require(block.timestamp <= _unlockTime, 'Unlock time should be in the future');\n        unlockTime = _unlockTime;\n        owner = payable(msg.sender);\n    }\n\n    modifier onlyOwner() {\n        require(msg.sender == owner, 'Only owner can do this');\n        _;\n    }\n\n    function withdraw() external payable {\n        require(block.timestamp >= unlockTime || canWithdrawEarly, \"You can't withdraw yet\");\n        uint balanceOfuser = shareOf[msg.sender];\n        require(balanceOfuser > 0, 'Cant withdraw zero balace!');\n        shareOf[msg.sender] = 0;\n        payable(msg.sender).transfer(balanceOfuser);\n        emit Withdrawal(balanceOfuser, block.timestamp);\n    }\n\n    function getShare(address investor) external view returns (uint) {\n        return shareOf[investor];\n    }\n\n    function getTotalValueLocked() external view returns (uint) {\n        return address(this).balance;\n    }\n\n    function closeVault() external payable onlyOwner {\n        require(!canWithdrawEarly, 'Already approved to withraw funds!');\n        canWithdrawEarly = true;\n    }\n\n    receive() external payable {\n        require(msg.value > 0, 'deposite must be larger then zero');\n        shareOf[msg.sender] += msg.value;\n        emit Deposite(msg.value, msg.sender);\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

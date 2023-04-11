@@ -11,7 +11,7 @@ function App() {
     useAuthenticated()
   window.ethereum.on('accountsChanged', accountChangedHandler)
   window.ethereum.on('chainChanged', chainChangedHandler)
-  const { contractInstance } = useContract(VaultArtifact, '0x6fBFEfA3aF55D0424BA1F0c8be2E6C3dFBC10d84', signer)
+  const { contractInstance } = useContract(VaultArtifact, '0xf2E23c2d9bB29D5543f72F9A204a24e3E033A017', signer)
   return (
     <Center alignItems="center" display="flex" height={'100vh'}>
       <Card zIndex={5} width={800} height={500} display="flex" backgroundColor="yellow.50">

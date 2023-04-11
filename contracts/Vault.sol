@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.1;
 
 contract Vault {
     uint public unlockTime;
@@ -7,26 +7,39 @@ contract Vault {
     mapping(address => uint) public shareOf;
     event Withdrawal(uint amount, uint when);
     event Deposite(uint amount, address investor);
+    bool public canWithdrawEarly;
 
     constructor(uint _unlockTime) payable {
-        require(block.timestamp < _unlockTime, 'Unlock time should be in the future');
+        require(block.timestamp <= _unlockTime, 'Unlock time should be in the future');
         unlockTime = _unlockTime;
         owner = payable(msg.sender);
     }
 
-    function withdraw() public payable {
-        require(block.timestamp >= unlockTime, "You can't withdraw yet");
-        require(shareOf[msg.sender] > 0, 'Cant withdraw zero balace!');
-        emit Withdrawal(shareOf[msg.sender], block.timestamp);
-        payable(msg.sender).transfer(shareOf[msg.sender]);
+    modifier onlyOwner() {
+        require(msg.sender == owner, 'Only owner can do this');
+        _;
     }
 
-    function getShare(address investor) public view returns (uint) {
+    function withdraw() external payable {
+        require(block.timestamp >= unlockTime || canWithdrawEarly, "You can't withdraw yet");
+        uint balanceOfuser = shareOf[msg.sender];
+        require(balanceOfuser > 0, 'Cant withdraw zero balace!');
+        shareOf[msg.sender] = 0;
+        payable(msg.sender).transfer(balanceOfuser);
+        emit Withdrawal(balanceOfuser, block.timestamp);
+    }
+
+    function getShare(address investor) external view returns (uint) {
         return shareOf[investor];
     }
 
-    function getTotalValueLocked() public view returns (uint) {
+    function getTotalValueLocked() external view returns (uint) {
         return address(this).balance;
+    }
+
+    function closeVault() external payable onlyOwner {
+        require(!canWithdrawEarly, 'Already approved to withraw funds!');
+        canWithdrawEarly = true;
     }
 
     receive() external payable {

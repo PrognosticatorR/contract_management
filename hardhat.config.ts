@@ -5,7 +5,7 @@ import secrets from './.secret.testnet.json'
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: '0.8.17',
+    version: '0.8.10',
     settings: {
       optimizer: {
         enabled: true,
@@ -16,8 +16,13 @@ const config: HardhatUserConfig = {
   networks: {
     'testnet-eth': {
       accounts: { mnemonic: secrets.mnemonic },
-      url: `https://goerli.infura.io/v3/${secrets.api_key}`,
+      url: secrets.node_url,
       chainId: 5,
+    },
+    local: {
+      accounts: { mnemonic: secrets.mnemonic_local },
+      url: secrets.node_local,
+      chainId: 1337,
     },
   },
   paths: {
@@ -26,10 +31,10 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: {
       default: 2, // here this will by default take the first account as deployer
-      testnet: 1,
+      testnet: 2,
     },
     signer: {
-      default: 2, // here this will by default take the second account as feeCollector (so in the test this will be a different account than the deployer)
+      default: 1, // here this will by default take the second account as feeCollector (so in the test this will be a different account than the deployer)
       testnet: 1,
     },
   },

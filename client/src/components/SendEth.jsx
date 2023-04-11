@@ -11,8 +11,8 @@ export const SendEth = ({ contractInstance }) => {
   const [error, setError] = useState(false)
   const [erroMessage, setErrorMessage] = useState('')
   const { connectWalletHandler, isAuthenticated, defaultAccount, signer } = useAuthenticated()
-  const { unlockTime, contractOwner, fetchingData } = useFetchVault(contractInstance, defaultAccount)
-  const isReadyToWithdrawal = useMemo(() => new Date(unlockTime) < new Date(), [unlockTime])
+  const { unlockTime, contractOwner, fetchingData, canWithdrawEarly } = useFetchVault(contractInstance, defaultAccount)
+  const isReadyToWithdrawal = useMemo(() => new Date(unlockTime) < new Date() || canWithdrawEarly, [unlockTime])
   const isCurrnetuserOwner = contractOwner.toLowerCase() === defaultAccount.toLowerCase()
   async function handleClick(e) {
     e.preventDefault()
@@ -122,10 +122,9 @@ export const SendEth = ({ contractInstance }) => {
       </>
     )
   }
+  const btnText = isCurrnetuserOwner ? 'Close Vault!' : isReadyToWithdrawal ? 'Withdraw!' : 'Send Eth'
   function renderButton() {
-    const btnText = isCurrnetuserOwner ? 'Close Vault!' : 'Withdraw!'
     const btnAction = isCurrnetuserOwner ? closeVault : withdrawFund
-    console.log({ btnText, btnAction })
     return (
       <Stack direction={{ base: 'column', md: 'row' }} as={'form'} spacing={'12px'}>
         <Button
@@ -153,7 +152,7 @@ export const SendEth = ({ contractInstance }) => {
       {!fetchingData ? (
         <Container maxW={'lg'} bg={useColorModeValue('yellow.30', 'yellow.50')} boxShadow={'xl'} rounded={'lg'} p={6} direction={'column'}>
           <Heading as={'h2'} fontSize={{ base: 'xl', sm: '2xl' }} textAlign={'center'} mb={5}>
-            {isReadyToWithdrawal ? 'Withdraw Your Fund!' : 'Send Eth To Vault'}
+            {isReadyToWithdrawal ? 'Withdraw Your Fund!' : btnText}
           </Heading>
           {console.log(fetchingData)}
           {isReadyToWithdrawal || isCurrnetuserOwner ? renderButton() : renderSendForm()}

@@ -26,10 +26,11 @@ export const AuthenticateProvider = (props) => {
       .catch((error) => {
         setErrorMessage(error.message)
       })
-  }, [])
+  }, [defaultAccount])
 
   const accountChangedHandler = useCallback(
     (newAccount) => {
+      console.log(newAccount);
       let account = newAccount
       if (newAccount instanceof Array) {
         account = newAccount[0]
@@ -64,6 +65,7 @@ export const AuthenticateProvider = (props) => {
   }, [accountChangedHandler, getAccountBalance])
 
   const chainChangedHandler = useCallback(() => {
+    console.log('chainChangedHandler');
     // reload the page to avoid any errors with chain change mid use of application
     window.location.reload()
   }, [])
